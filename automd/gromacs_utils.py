@@ -112,7 +112,8 @@ def test_gromacs():
 
 def generate_gromacs_grofile(filename, dest_dir='.', notcenter: bool = False):
     write_filename = os.path.realpath(f"{dest_dir}/{GRO_FILE}")
-    format_convert(filename, write_filename, outputformat='gromacs', extra_data={'filename': GRO_FILE})
+    format_convert(filename, write_filename, outputformat='gromacs',
+                   extra_data={'filename': GRO_FILE})
     # try:
     #     import gaseio
     #     x = gaseio.read(filename, force_gase=True)
@@ -124,7 +125,8 @@ def generate_gromacs_grofile(filename, dest_dir='.', notcenter: bool = False):
     #                    write_format='gromacs', data={'filename': GRO_FILE})
     # centerize
     if not notcenter:
-        cmd = f'cd {dest_dir}; gmx editconf -c -f {write_filename} -o {write_filename}'
+        cmd = f'cd {dest_dir}; gmx editconf -c -f {write_filename} -o {write_filename} \
+                > editconf.log 2>editconf.err'
         logger.debug(f'grompp cmd: \n{cmd}')
         exit_code = os.system(cmd)
         if exit_code != 0:

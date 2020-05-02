@@ -9,6 +9,7 @@ import os
 import shutil
 import json
 import modlog
+import pdb
 
 from . import gromacs_utils
 # from .default_config import default_mdrun_config
@@ -17,7 +18,7 @@ logger = modlog.getLogger(__name__)
 DEFAULT_MAX_CORE = 4
 
 
-def generate_gromacs_topfile(input_file, dest_dir='.', outfilename=None):
+def generate_gromacs_topfile_itpfile(input_file, dest_dir='.', outfilename=None):
     """
     generate topfile with the given outfilename
     Input:
@@ -51,6 +52,7 @@ def run(input_file, mdrun_file=None, dest_dir='.',
     Output:
         dict, including all the calculated properties
     """
+    # pdb.set_trace()
     if isinstance(input_file, str) and os.path.exists(input_file):
         input_file = os.path.abspath(input_file)
     max_core = max_core or DEFAULT_MAX_CORE
