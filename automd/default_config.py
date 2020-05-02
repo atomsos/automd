@@ -1,0 +1,18 @@
+default_mdrun_config = {
+    'time': 10,
+    'time_unit': 'ps',
+    'dt': 0.5,
+    'dt_unit': 'fs',
+    'temperature': 600,
+    'temperature_unit': 'K',
+    'constant_pressure': False,
+    'pressure': 1,
+    'pressure_unit': 'bar',
+    'compressibility': 4.5e-5,
+    'nstxout': 1000,
+    'nstvout': 1000,
+    'nstfout': 1000,
+    'nstlog': 1000,
+    'nstenergy': 1000,
+    'nstxout_compressed': 5000,
+}

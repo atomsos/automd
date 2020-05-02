@@ -1,0 +1,47 @@
+#!/bin/bash
+
+CURDIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)
+xyzfile=$1
+
+if [ ! $xyzfile ]; then
+        echo "No xyz file found"
+        exit 1
+fi
+
+i=0
+last_energy=0
+# clean comment to prevent 4000char error
+tmp_xyzfile=$(mktemp).xyz
+sed '2c0' $xyzfile > $tmp_xyzfile
+cat $tmp_xyzfile
+echo $tmp_xyzfile
+# using convergence strategy to make sure the entire process is good
+while [ 1 ]; do
+        # create symblink and execute
+        ln -fs $CURDIR/openbabel-data ./openbabel-data______________________ && $CURDIR/obgmx.exe $tmp_xyzfile > obgmx.out 2>&1
+        rm -f ./openbabel-data______________________
+        i=$((i+1))
+        total_energy=$(tail -1 obgmx.ffout | awk '{print $4}')
+        # if [ $(echo $total_energy | wc -c) -lt 12 ]; then
+        #         break
+        # fi
+        if [ "$total_energy" == "$last_energy" ]; then
+                break
+        fi
+        last_energy=$total_energy
+done
+echo "Total times: $i"
+# rm -f openbabel-data______________________
+rm -f $tmp_xyzfile
+
+
+# merge .itp --> .top with cpp
+# cpp obgmx.top -I . > .obgmx.top.tmp
+# sed -i '/^#/d' .obgmx.top.tmp
+# for f in obgmx.out obgmx.ffout; do
+#         echo -e "\n\n\n;[$f]\n" >> .obgmx.top.tmp
+#         cat $f | sed -e 's/^/;/g' >> .obgmx.top.tmp
+# done
+# rm -f obgmx.itp obgmx.out obgmx.ffout
+# mv .obgmx.top.tmp obgmx.top
+

@@ -1,0 +1,9 @@
+atomtools>=1.9.2
+chemio>=1.7.2
+distro>=1.5.0
+Jinja2>=2.11.2
+json_tricks>=3.15.2
+modlog>=0.0.2
+numpy
+pandas>=1.0.3
+requests>=2.23.0

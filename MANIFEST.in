@@ -1,0 +1,4 @@
+include automd/*.mdp
+include automd/obgmx/exe/obgmx
+include automd/obgmx/exe/obgmx.exe
+include automd/obgmx/exe/openbabel-data______________________/*

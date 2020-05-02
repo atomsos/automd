@@ -1,0 +1,9 @@
+[submodule "test/chem_file_samples"]
+	path = test/chem_file_samples
+	url = http://git.atomse.com/skyzhang/chem_file_samples.git
+[submodule "tests/-"]
+	path = tests/-
+	url = http://git.atomse.com/git/skyzhang/chem_file_samples.git
+[submodule "tests/chem_file_samples"]
+	path = tests/chem_file_samples
+	url = http://git.atomse.com/git/skyzhang/chem_file_samples.git
