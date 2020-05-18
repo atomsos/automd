@@ -11,10 +11,10 @@ fi
 i=0
 last_energy=0
 # clean comment to prevent 4000char error
-tmp_xyzfile=$(mktemp).xyz
+tmp_xyzfile="$(mktemp --dry-run).xyz"
 sed '2c0' $xyzfile > $tmp_xyzfile
-cat $tmp_xyzfile
-echo $tmp_xyzfile
+# cat $tmp_xyzfile
+# echo $tmp_xyzfile
 # using convergence strategy to make sure the entire process is good
 while [ 1 ]; do
         # create symblink and execute
