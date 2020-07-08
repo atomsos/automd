@@ -35,7 +35,7 @@ def generate_gromacs_topfile_itpfile(input_file, dest_dir='.', outfilename=None)
     return os.path.realpath(topfile), os.path.realpath(itpfile)
 
 
-def run(input_file, mdrun_file=None, dest_dir='.',
+def run(input_file, runtype='md', mdrun_file=None, dest_dir='.',
         max_core: int = DEFAULT_MAX_CORE, device: str = 'cpu',
         extract_forces: bool = False, topfile=None, itpfile=None,
         dry_run: bool = False, **args):
@@ -55,6 +55,7 @@ def run(input_file, mdrun_file=None, dest_dir='.',
     # pdb.set_trace()
     if isinstance(input_file, str) and os.path.exists(input_file):
         input_file = os.path.abspath(input_file)
+    assert runtype in ['md', 'emin'], 'runtype must be either md or emin'
     max_core = max_core or DEFAULT_MAX_CORE
     logger.debug(f"max_core: {max_core}")
     logger.debug(f"input_file: {input_file}, \nargs: {args}")
@@ -62,17 +63,20 @@ def run(input_file, mdrun_file=None, dest_dir='.',
     gromacs_utils.test_gromacs()
     out_dict = dict()
     os.makedirs(dest_dir, exist_ok=True)
-    grofile = gromacs_utils.generate_gromacs_grofile(input_file,
-                                                     dest_dir=dest_dir)
+    grofile = gromacs_utils.generate_gromacs_grofile(
+        input_file,
+        dest_dir=dest_dir)
     if not topfile:
-        topfile, itpfile = gromacs_utils.generate_gromacs_topfile(input_file,
-                                                                  dest_dir=dest_dir)
+        topfile, itpfile = gromacs_utils.generate_gromacs_topfile(
+            input_file,
+            dest_dir=dest_dir)
     else:
         if not itpfile:
-            itpfile = os.path.splitext(topfile)[0] + '.itp' 
+            itpfile = os.path.splitext(topfile)[0] + '.itp'
     mdrunfile = gromacs_utils.generate_mdrun_file(
-        mdrun_file, dest_dir=dest_dir, **args)
-    gromacs_utils.set_gro_element_name_with_top(topfile, grofile, itpfile)
+        mdrun_file, runtype=runtype, dest_dir=dest_dir, **args)
+    gromacs_utils.set_gro_element_name_with_top(
+        grofile, topfile, itpfile)
     mdrunfile = gromacs_utils.exec_grompp(
         mdrunfile, topfile, grofile, dest_dir=dest_dir)
     out_dict['grofile'] = grofile
@@ -85,6 +89,7 @@ def run(input_file, mdrun_file=None, dest_dir='.',
         _fdict = gromacs_utils.exec_mdrun(
             max_core, device=device, dest_dir=dest_dir)
         out_dict.update(_fdict)
+        import pdb; pdb.set_trace()
         output_gro = gromacs_utils.exec_get_trajectory(dest_dir=dest_dir)
         out_dict['output_gro'] = output_gro
         logger.debug(f"{json.dumps(out_dict, indent=4)}")

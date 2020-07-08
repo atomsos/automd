@@ -1,0 +1,20 @@
+; Parameters describing what to do, when to stop and what to save
+integrator	= steep		; Algorithm options
+				; steep = steepest descent minimization 
+				; MD = Leap Frog algorith for integrating Newtonś equations of motion )
+emtol		= 1.0		; Stop minimization when the energy changes by less than emtol kJ/mol.
+nsteps		= 1000		; Maximum number of (minimization) steps to perform
+nstenergy	= 1		; Write energies to disk every nstenergy steps
+nstxout         = 1             ; writing coordinates to output trajectory file
+nstfout         = 1             ; writing forces to output trajectory
+
+; Parameters describing how to find the neighbors of each atom and how to calculate the interactions
+nstlist		= 5		; Frequency to update the neighbor list and long range forces
+ns_type		= simple	; Method to determine neighbor list (simple, grid)
+rlist		= 0.5		; Cut-off for making neighbor list (short range forces)
+coulombtype	= cut-off	; Treatment of long range electrostatic interactions
+rcoulomb	= 0.5		; long range electrostatic cut-off
+rvdw		= 0.5		; long range Van der Waals cut-off
+constraints	= none		; Bond types to replace by constraints
+; pbc		= no		; Periodic Boundary Conditions (yes/no)
+

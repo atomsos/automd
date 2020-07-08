@@ -142,9 +142,10 @@ def generate_gromacs_topfile(filename, input_format=None,
     return top_fname, itp_fname
 
 
-def set_gro_element_name_with_top(top_filename: str = TOP_FILE,
-                                  gro_filename: str = GRO_FILE,
-                                  itp_filename: str = ITP_FILE):
+def set_gro_element_name_with_top(
+        gro_filename: str = GRO_FILE,
+        top_filename: str = TOP_FILE,
+        itp_filename: str = ITP_FILE):
     top_filename = top_filename or TOP_FILE
     itp_filename = itp_filename or ITP_FILE
     gro_filename = gro_filename or GRO_FILE
@@ -189,18 +190,25 @@ def regularize_mdrun_config(mdrun_config):
     return mdrun_config
 
 
-def generate_mdrun_file(mdrun_file=None, dest_dir='.', **kwargs):
-    mdrun_config = default_mdrun_config.copy()
-    for key, val in kwargs.items():
-        if key in mdrun_config:
-            mdrun_config[key] = val
-    mdrun_config = regularize_mdrun_config(mdrun_config)
+def generate_mdrun_file(mdrun_file=None, runtype='md', dest_dir='.', **kwargs):
+    assert runtype in ['md', 'emin'], 'runtype must be either md or emin'
+    if runtype == 'emin':
+        mdrun_file = os.path.join(BASEDIR, 'mdrun_emin.mdp')
+    else:
+        mdrun_config = default_mdrun_config.copy()
+        for key, val in kwargs.items():
+            if key in mdrun_config:
+                mdrun_config[key] = val
+        mdrun_config = regularize_mdrun_config(mdrun_config)
     dest_dir = dest_dir or '.'
     dest_mdrun = os.path.realpath(f"{dest_dir}/{MDRUN_FILE}")
     if mdrun_file is not None:
         logger.debug(F"mdrun file: {mdrun_file}")
-        if not os.path.samefile(mdrun_file, dest_mdrun):
+        try:
             shutil.copyfile(mdrun_file, dest_mdrun)
+        except shutil.SameFileError:
+            pass
+
     else:
         env = Environment(loader=FileSystemLoader(BASEDIR))
         template = env.get_template(MDRUN_TEMP)
@@ -265,7 +273,8 @@ gmx mdrun -v -deffnm topol \
     }
 
 
-def gromacs_extract_data(cmd, data_filename, error_msg='', debug_msg=''):
+def gromacs_extract_data(cmd, data_filename,
+                         error_msg='', debug_msg=''):
     import pandas as pd
     logger.debug(debug_msg)
     exit_code, output = subprocess.getstatusoutput(cmd)
@@ -286,16 +295,20 @@ def gromacs_extract_data(cmd, data_filename, error_msg='', debug_msg=''):
 def exec_get_trajectory(outgro_filename=OUTPUT_GRO, dest_dir='.'):
     dest_dir = dest_dir or '.'
     # outgro_filename = os.path.realpath(f'{outgro_filename}')
-    cmd = f'cd {dest_dir}; gmx trjconv -f topol.xtc \
+    all_traj_filenames = ['topol.xtc', 'traj.trr']
+    for traj_filename in all_traj_filenames:
+        cmd = f'cd {dest_dir}; gmx trjconv -f {traj_filename} \
 -o {outgro_filename} << EOF\n0 EOF \
 >/dev/null 2>&1'
-    logger.debug(f"trjconv cmd:\n {cmd}")
-    exit_code, output = subprocess.getstatusoutput(cmd)
-    if exit_code != 0:
-        logger.warning(output)
-        raise OSError('trjcov error')
-    outgro_filename = os.path.realpath(f"{dest_dir}/{outgro_filename}")
-    return outgro_filename
+        logger.debug(f"trjconv cmd:\n {cmd}")
+        exit_code, output = subprocess.getstatusoutput(cmd)
+        if exit_code == 0:
+        #     logger.warning(output)
+        #     raise OSError('trjcov error')
+            outgro_filename = os.path.realpath(f"{dest_dir}/{outgro_filename}")
+            return outgro_filename
+    logger.warning(output)
+    raise OSError('trjcov error')
 
 
 def get_gromacs_legends(filename):
@@ -345,7 +358,8 @@ def extract_energies_dict(edr_filename=EDR_FILE, dest_dir='.'):
     legends = get_gromacs_legends(energies_fname)
     energies = energies.T
     utrans = float(atomtools.unit.trans_energy('kJ/mol', 'eV'))
-    energies[:legends.index('Temperature')] *= utrans
+    if 'Temperature' in legends:
+        energies[:legends.index('Temperature')] *= utrans
     energies_dict = dict(zip(legends, energies))
     return energies_dict
 
