@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 3.2.2
+
+* fix MANIFEST.in
+
 ## 3.2.1
 
 * fix obgmx generate tempfile bug

@@ -14,6 +14,13 @@ convenient for installation.
 
 
 
+## Installation
+
+* Install requirements
+        - `pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt`
+        - Or `pip install -r requirements.txt`
+* install
+        - `python3 setup.py install`
 
 ## OBGMX
 
