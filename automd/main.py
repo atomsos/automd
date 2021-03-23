@@ -89,7 +89,7 @@ def run(input_file, runtype='md', mdrun_file=None, dest_dir='.',
         _fdict = gromacs_utils.exec_mdrun(
             max_core, device=device, dest_dir=dest_dir)
         out_dict.update(_fdict)
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         output_gro = gromacs_utils.exec_get_trajectory(dest_dir=dest_dir)
         out_dict['output_gro'] = output_gro
         logger.debug(f"{json.dumps(out_dict, indent=4)}")
