@@ -1,9 +1,11 @@
 #!/bin/bash
 
 
+CURDIR="$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" 
 [ "$(uname)" == "Linux" ] && CURDIR="$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" 
-[ "$(uname)" == "Darwin" ] && CURDIR="$(dirname -- "$(readlink -- -f "${BASH_SOURCE[0]}")")"
+[ "$(uname)" == "Darwin" ] && CURDIR="$(dirname -- "${BASH_SOURCE[0]}")"
 [ "$(uname)" == "Darwin" ] && [ "$CURDIR" == "." ] && CURDIR="$(dirname -- "${PWD}/${BASH_SOURCE[0]}")"
+
 
 CURDIR=$(cd $CURDIR; pwd)
 echo $CURDIR

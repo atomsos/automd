@@ -21,6 +21,8 @@ from jinja2 import FileSystemLoader, Environment
 
 import atomtools.unit
 from .default_config import default_mdrun_config
+import time
+from timer import timer
 
 
 os.environ['GMX_MAXBACKUP'] = '-1'
@@ -134,11 +136,19 @@ def generate_gromacs_grofile(filename, dest_dir='.', notcenter: bool = False):
     return write_filename
 
 
-def generate_gromacs_topfile(filename, input_format=None,
-                             obgmx_method='exe', dest_dir='.'):
+def generate_gromacs_topfile(
+    filename, input_format=None,
+    obgmx_method='exe', dest_dir='.',
+    use_geom_bond=False,
+    use_geom_angle=False,
+    use_geom_dihedral=False,
+    use_harmonic_angle=False,
+):
     from . import obgmx
     top_fname, itp_fname = obgmx.generate_gromacs_obgmx_UFF_topfile(
-        filename, input_format, obgmx_method, dest_dir)
+        filename, input_format, obgmx_method, dest_dir,
+        use_geom_bond, use_geom_angle,
+        use_geom_dihedral, use_harmonic_angle)
     return top_fname, itp_fname
 
 
@@ -232,6 +242,12 @@ def exec_grompp(mdrun_filename=MDRUN_FILE, top_filename=TOP_FILE,
     return mdrun_filename
 
 
+def get_help_text():
+    help_cmd = f'gmx mdrun -h'
+    _, help_text = subprocess.getstatusoutput(help_cmd)
+    return help_text
+
+
 def exec_mdrun(maxcore=4, device='cpu', dest_dir='.'):
     """
     execute mdrun, the main part of MD simulation
@@ -246,8 +262,7 @@ def exec_mdrun(maxcore=4, device='cpu', dest_dir='.'):
         maxcore = 4
     dest_dir = dest_dir or '.'
     assert device in ['auto', 'cpu', 'gpu']
-    help_cmd = f'gmx mdrun -h'
-    _, help_text = subprocess.getstatusoutput(help_cmd)
+    help_text = get_help_text()
     pme_flag = ''
     pmefft_flag = ''
     if '-pme ' in help_text:
@@ -303,8 +318,8 @@ def exec_get_trajectory(outgro_filename=OUTPUT_GRO, dest_dir='.'):
         logger.debug(f"trjconv cmd:\n {cmd}")
         exit_code, output = subprocess.getstatusoutput(cmd)
         if exit_code == 0:
-        #     logger.warning(output)
-        #     raise OSError('trjcov error')
+            #     logger.warning(output)
+            #     raise OSError('trjcov error')
             outgro_filename = os.path.realpath(f"{dest_dir}/{outgro_filename}")
             return outgro_filename
     logger.warning(output)

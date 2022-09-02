@@ -15,6 +15,8 @@ import tempfile
 import distro
 import modlog
 import atomtools.filetype
+import pdb
+import chemio
 
 
 BASEDIR = os.path.dirname(os.path.realpath(__file__))
@@ -104,11 +106,23 @@ def get_gromacs_obgmx_UFF_top_online(xyzfilename):
     return topfile, itpfile
 
 
-def get_gromacs_obgmx_UFF_top_exe(xyzfilename):
+def get_gromacs_obgmx_UFF_top_exe(
+    xyzfilename,
+    use_geom_bond=False,
+    use_geom_angle=False,
+    use_geom_dihedral=False
+):
     assert os.path.exists(OBGMX_EXE_FNAME), f"{OBGMX_EXE_FNAME} not found"
     tempdir = tempfile.mkdtemp()
     xyzfilename = os.path.abspath(xyzfilename)
-    cmd = f"cd {tempdir}; {OBGMX_EXE_FNAME} {xyzfilename}"
+    geom_switch = 0
+    geom_switch += 1 if use_geom_bond else 0
+    geom_switch += 2 if use_geom_angle else 0
+    geom_switch += 4 if use_geom_dihedral else 0
+    if geom_switch == 0:
+        cmd = f"cd {tempdir}; {OBGMX_EXE_FNAME} -d {xyzfilename}"
+    else:
+        cmd = f"cd {tempdir}; {OBGMX_EXE_FNAME} -d -G {geom_switch} {xyzfilename}"
     logger.info(cmd)
     status, stdout = subprocess.getstatusoutput(cmd)
     fname = os.path.join(tempdir, 'obgmx.top')
@@ -141,21 +155,14 @@ def get_gromacs_obgmx_UFF_top_exe(xyzfilename):
 #     return output
 
 
-# def generate_gromacs_obgmx_UFF_topfile(filename, input_format=None,
-#                                        obgmx_method='exe', dest_dir=None):
-#     output = get_gromacs_obgmx_UFF_top(filename, input_format=input_format,
-#                                        obgmx_method=obgmx_method)
-#     dest_dir = dest_dir or '.'
-#     write_fname = f"{dest_dir}/obgmx.top"
-#     if not os.path.exists(dest_dir):
-#         os.makedirs(dest_dir)
-#     with open(write_fname, 'w') as fd:
-#         fd.write(output)
-#     return os.path.realpath(write_fname)
-
-
-def generate_gromacs_obgmx_UFF_topfile(filename, input_format=None,
-                                       obgmx_method='exe', dest_dir='.'):
+def generate_gromacs_obgmx_UFF_topfile(
+        filename, input_format=None,
+        obgmx_method='exe', dest_dir='.',
+        use_geom_bond=False,
+        use_geom_angle=False,
+        use_geom_dihedral=False,
+        use_harmonic_angle=False,
+):
     """
     generate gromacs UFF top/itp file with OBGMX
     Input:
@@ -169,22 +176,31 @@ def generate_gromacs_obgmx_UFF_topfile(filename, input_format=None,
     # import chemio
     assert obgmx_method == 'exe', 'obgmx_method must be "exe"'
     xyzfilename = filename
+    xyzfilename = os.path.join(dest_dir, xyzfilename)
     rm_flag = False
     if isinstance(xyzfilename, str) and not xyzfilename.endswith('.xyz'):
         xyzfilename = tempfile.mktemp(suffix='.xyz', prefix='automd')
-        format_convert(filename, xyzfilename, outputformat='xyz')
-        # chemio.convert(filename, xyzfilename,
-        #                read_format=input_format, write_format='xyz')
+    if not os.path.exists(xyzfilename):
+        # format_convert(filename, xyzfilename, outputformat='xyz')
         rm_flag = True
-    cmd = f"cd {dest_dir}; {OBGMX_EXE_FNAME} {xyzfilename}"
+        chemio.convert(filename, xyzfilename,
+                       read_format=input_format, write_format='xyz')
+    geom_switch = 0
+    geom_switch += 1 if use_geom_bond else 0
+    geom_switch += 2 if use_geom_angle else 0
+    geom_switch += 4 if use_geom_dihedral else 0
+    if use_harmonic_angle:
+        cmd = f"cd {dest_dir}; {OBGMX_EXE_FNAME} -H -d -G {geom_switch} {xyzfilename}"
+    else:
+        cmd = f"cd {dest_dir}; {OBGMX_EXE_FNAME} -d -G {geom_switch} {xyzfilename}"
     logger.info(cmd)
     status, stdout = subprocess.getstatusoutput(cmd)
     if rm_flag:
         os.remove(xyzfilename)
     if status != 0:
         raise RuntimeError(stdout)
-    top_filename = os.path.realpath(os.path.join('.', 'obgmx.top'))
-    itp_filename = os.path.realpath(os.path.join('.', 'obgmx.itp'))
+    top_filename = os.path.realpath(os.path.join(dest_dir, 'obgmx.top'))
+    itp_filename = os.path.realpath(os.path.join(dest_dir, 'obgmx.itp'))
     return top_filename, itp_filename
 
 

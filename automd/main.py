@@ -10,15 +10,24 @@ import shutil
 import json
 import modlog
 import pdb
+from timer import timer
 
 from . import gromacs_utils
 # from .default_config import default_mdrun_config
 
 logger = modlog.getLogger(__name__)
 DEFAULT_MAX_CORE = 4
+gromacs_utils.test_gromacs()
 
 
-def generate_gromacs_topfile_itpfile(input_file, dest_dir='.', outfilename=None):
+def generate_gromacs_topfile_itpfile(
+        input_file, dest_dir='.', outfilename=None,
+        use_geom_bond=False,
+        use_geom_angle=False,
+        use_geom_dihedral=False,
+        use_harmonic_angle=False,
+
+):
     """
     generate topfile with the given outfilename
     Input:
@@ -28,7 +37,12 @@ def generate_gromacs_topfile_itpfile(input_file, dest_dir='.', outfilename=None)
     """
     os.makedirs(dest_dir, exist_ok=True)
     topfile, itpfile = gromacs_utils.generate_gromacs_topfile(
-        input_file, dest_dir=dest_dir)
+        input_file, dest_dir=dest_dir,
+        use_geom_bond=use_geom_bond,
+        use_geom_angle=use_geom_angle,
+        use_geom_dihedral=use_geom_dihedral,
+        use_harmonic_angle=use_harmonic_angle,
+    )
     if outfilename:
         shutil.move(topfile, outfilename)
         topfile = outfilename
@@ -52,7 +66,6 @@ def run(input_file, runtype='md', mdrun_file=None, dest_dir='.',
     Output:
         dict, including all the calculated properties
     """
-    # pdb.set_trace()
     if isinstance(input_file, str) and os.path.exists(input_file):
         input_file = os.path.abspath(input_file)
     assert runtype in ['md', 'emin'], 'runtype must be either md or emin'
@@ -60,21 +73,22 @@ def run(input_file, runtype='md', mdrun_file=None, dest_dir='.',
     logger.debug(f"max_core: {max_core}")
     logger.debug(f"input_file: {input_file}, \nargs: {args}")
     # main part
-    gromacs_utils.test_gromacs()
     out_dict = dict()
     os.makedirs(dest_dir, exist_ok=True)
-    grofile = gromacs_utils.generate_gromacs_grofile(
-        input_file,
-        dest_dir=dest_dir)
+    if input_file.endswith('.gro'):
+        grofile = input_file
+    else:
+        grofile = gromacs_utils.generate_gromacs_grofile(
+            input_file, dest_dir=dest_dir)
     if not topfile:
         topfile, itpfile = gromacs_utils.generate_gromacs_topfile(
-            input_file,
-            dest_dir=dest_dir)
+            input_file, dest_dir=dest_dir)
     else:
         if not itpfile:
             itpfile = os.path.splitext(topfile)[0] + '.itp'
     mdrunfile = gromacs_utils.generate_mdrun_file(
         mdrun_file, runtype=runtype, dest_dir=dest_dir, **args)
+    # pdb.set_trace()
     gromacs_utils.set_gro_element_name_with_top(
         grofile, topfile, itpfile)
     mdrunfile = gromacs_utils.exec_grompp(

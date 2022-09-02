@@ -1,24 +1,11 @@
 #!/bin/bash
 
 CURDIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)
-xyzfile=$1
-
-if [ ! $xyzfile ]; then
-        echo "No xyz file found"
-        exit 1
-fi
-
 i=0
 last_energy=0
-# clean comment to prevent 4000char error
-tmp_xyzfile="$(mktemp --dry-run).xyz"
-sed '2c0' $xyzfile > $tmp_xyzfile
-# cat $tmp_xyzfile
-# echo $tmp_xyzfile
-# using convergence strategy to make sure the entire process is good
 while [ 1 ]; do
         # create symblink and execute
-        ln -fs $CURDIR/openbabel-data ./openbabel-data______________________ && $CURDIR/obgmx.exe $tmp_xyzfile > obgmx.out 2>&1
+        ln -fs $CURDIR/openbabel-data ./openbabel-data______________________ && $CURDIR/obgmx.exe $*  > obgmx.out 2>obgmx.err 
         rm -f ./openbabel-data______________________
         i=$((i+1))
         total_energy=$(tail -1 obgmx.ffout | awk '{print $4}')
