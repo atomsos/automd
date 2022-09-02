@@ -152,3 +152,4 @@ topol.*
 tests/*/*
 Ebuild/
 tests/
+.vscode
